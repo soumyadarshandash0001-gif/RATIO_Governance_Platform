@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATS AI Audit Dashboard | NVIDIA-Grade Analytics</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Roboto+Mono&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="dark-theme">
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="logo">
+                <span class="highlight">ATS</span> AUDIT LAYER
+            </div>
+            <nav>
+                <div class="status-badge" id="app-status">Backend: Connected</div>
+            </nav>
+        </header>
+
+        <!-- Main Content -->
+        <main>
+            <section class="control-panel">
+                <div class="card glass">
+                    <h3>Model Audit Terminal</h3>
+                    <div class="input-group">
+                        <input type="text" id="model-name" placeholder="Enter Model Identifier (e.g. llama3)" value="llama3">
+                        <button id="run-audit-btn" class="btn-primary">RUN SYSTEM AUDIT</button>
+                    </div>
+                    <div id="loader" class="hidden">
+                        <div class="spinner"></div>
+                        <p>Executing Neural Governance Pipeline...</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="dashboard-grid">
+                <!-- ATS Score Gauge -->
+                <div class="card glass score-card">
+                    <h3>AI Trust Score (ATS)</h3>
+                    <div class="score-display">
+                        <span id="ats-score">0</span><span class="total">/ 900</span>
+                    </div>
+                    <div class="decision-badge" id="decision">Pending</div>
+                    <p id="decision-reason">Run an audit to see deployment results.</p>
+                </div>
+
+                <!-- Radar Chart -->
+                <div class="card glass chart-card">
+                    <h3>Governance Dimensions</h3>
+                    <canvas id="radarChart"></canvas>
+                </div>
+
+                <!-- Legal Risks -->
+                <div class="card glass risk-card">
+                    <h3>Compliance Risk Mapping (India)</h3>
+                    <div id="legal-risks-list" class="risk-list">
+                        <div class="risk-item placeholder">No risks detected</div>
+                    </div>
+                    <div class="penalty-footer">
+                        Potential Penalty Exposure: <span id="penalty-amount">₹0 Cr</span>
+                    </div>
+                </div>
+
+                <!-- Recommendations -->
+                <div class="card glass recommendations-card">
+                    <h3>Remediation Roadmap</h3>
+                    <ul id="recommendations-list">
+                        <li>System waiting for audit data...</li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2026 RATIO Governance Platform | ATS Layer Integration v1.0</p>
+        </footer>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
