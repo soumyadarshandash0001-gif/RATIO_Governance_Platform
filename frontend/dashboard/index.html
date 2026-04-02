@@ -3,98 +3,207 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS AI Audit Dashboard | NVIDIA-Grade Analytics</title>
+    <title>ATS & RATIO Governance Hub | NVIDIA Premium Analytics</title>
     <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Roboto+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body class="dark-theme">
-    <div class="container">
-        <!-- Header -->
-        <header>
-            <div class="logo">
-                <span class="highlight">ATS</span> AUDIT LAYER
+    <div class="layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <span class="logo-text"><span class="highlight">RATIO</span> HUB</span>
             </div>
-            <nav>
-                <div class="status-badge" id="app-status">Backend: Connected</div>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-link active" data-tab="dashboard">
+                    <i class="fas fa-chart-line"></i> Dashboard
+                </a>
+                <a href="#" class="nav-link" data-tab="registry">
+                    <i class="fas fa-plus-circle"></i> Register Model
+                </a>
+                <a href="#" class="nav-link" data-tab="advisory">
+                    <i class="fas fa-robot"></i> AI Advisor
+                </a>
+                <a href="#" class="nav-link" data-tab="monitoring">
+                    <i class="fas fa-wave-square"></i> Monitoring
+                </a>
+                <a href="#" class="nav-link" data-tab="verification">
+                    <i class="fas fa-certificate"></i> Certification
+                </a>
             </nav>
-        </header>
+            <div class="sidebar-footer">
+                <button id="settings-btn" class="icon-btn" title="API Settings">
+                    <i class="fas fa-cog"></i> Settings
+                </button>
+            </div>
+        </aside>
 
-        <!-- Main Content -->
-        <main>
-            <section class="control-panel">
-                <div class="card glass">
-                    <h3>Model Audit Terminal</h3>
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="content-header">
+                <div class="header-breadcrumb">AI Governance / <span id="current-page-name">Dashboard</span></div>
+                <div class="status-indicator">
+                    <span class="status-badge" id="app-status">Backend: Connecting...</span>
+                </div>
+            </header>
+
+            <!-- TAB: Dashboard -->
+            <section id="tab-dashboard" class="tab-pane active">
+                <div class="control-panel card glass">
                     <div class="input-group">
-                        <input type="text" id="model-name" placeholder="Enter Model Identifier (e.g. llama3)" value="llama3">
-                        <button id="run-audit-btn" class="btn-primary">RUN SYSTEM AUDIT</button>
+                        <input type="text" id="model-name" placeholder="Enter Model (e.g. llama3)" value="llama3">
+                        <button id="run-audit-btn" class="btn-primary">RUN UNIFIED AUDIT</button>
                     </div>
-                    <div id="loader" class="hidden">
-                        <div class="spinner"></div>
-                        <p>Executing Neural Governance Pipeline...</p>
+                </div>
+
+                <div class="dashboard-grid">
+                    <!-- ATS Score -->
+                    <div class="card glass score-card">
+                        <h3>AI Trust Score (ATS)</h3>
+                        <div class="score-display">
+                            <span id="ats-score">0</span>
+                        </div>
+                        <div class="decision-badge" id="decision">Pending</div>
+                        <p id="decision-reason">Run audit to see deployment readiness.</p>
+                    </div>
+
+                    <!-- RATIO Score -->
+                    <div class="card glass ratio-card">
+                        <h3>RATIO Original Score</h3>
+                        <div class="score-display ratio-score">
+                            <span id="ratio-score">0</span>
+                        </div>
+                        <div class="metrics-grid">
+                            <div class="metric-item">
+                                <span class="label">Tests Status</span>
+                                <span class="value" id="ratio-tests">0 / 0</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="label">Compliance</span>
+                                <span class="value" id="compliance-status">N/A</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Radar Chart -->
+                    <div class="card glass chart-card">
+                        <h3>Governance Dimensions</h3>
+                        <canvas id="radarChart"></canvas>
+                    </div>
+
+                    <!-- Legal Risks -->
+                    <div class="card glass risk-card">
+                        <h3>Indian Law Risk Mapping</h3>
+                        <div id="legal-risks-list" class="risk-list">
+                            <div class="risk-item placeholder">No immediate risks detected.</div>
+                        </div>
+                        <div class="penalty-box">
+                            Potential Penalty: <span id="penalty-amount" class="danger">₹0 Cr</span>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <section class="dashboard-grid">
-                <!-- ATS Score Gauge -->
-                <div class="card glass score-card">
-                    <h3>AI Trust Score (ATS)</h3>
-                    <div class="score-display">
-                        <span id="ats-score">0</span>
-                    </div>
-                    <div class="decision-badge" id="decision">Pending</div>
-                    <p id="decision-reason">Unified audit pending.</p>
-                </div>
-
-                <!-- ORIGINAL RATIO Score -->
-                <div class="card glass ratio-card">
-                    <h3>RATIO Governance Score</h3>
-                    <div class="score-display ratio-score">
-                        <span id="ratio-score">0</span>
-                    </div>
-                    <div class="metrics-grid">
-                        <div class="metric-item">
-                            <span class="label">Tests Status</span>
-                            <span class="value" id="ratio-tests">0 / 0</span>
+            <!-- TAB: Registry -->
+            <section id="tab-registry" class="tab-pane">
+                <div class="card glass form-container">
+                    <h3>Register AI Model</h3>
+                    <form id="register-form">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Provider</label>
+                                <select id="reg-provider">
+                                    <option value="custom_http">Ollama / Local</option>
+                                    <option value="openai">OpenAI</option>
+                                    <option value="huggingface">HuggingFace</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Display Name</label>
+                                <input type="text" id="reg-name" placeholder="My Enterprise Model">
+                            </div>
+                            <div class="form-group">
+                                <label>Identifier</label>
+                                <input type="text" id="reg-id" placeholder="llama3-70b-instruct">
+                            </div>
+                            <div class="form-group">
+                                <label>Max Tokens</label>
+                                <input type="number" id="reg-tokens" value="1000">
+                            </div>
                         </div>
-                        <div class="metric-item">
-                            <span class="label">Compliance</span>
-                            <span class="value" id="compliance-status">N/A</span>
+                        <button type="submit" class="btn-primary">REGISTER MODEL</button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- TAB: Advisory -->
+            <section id="tab-advisory" class="tab-pane">
+                <div class="chat-container card glass">
+                    <div class="chat-header">
+                        <h3>🤖 Governance Advisory (Llama Powered)</h3>
+                    </div>
+                    <div class="chat-messages" id="chat-messages">
+                        <div class="message bot">Hello! I am your AI Compliance Officer. Ask me anything about your audit results or Indian Laws.</div>
+                    </div>
+                    <div class="chat-input-area">
+                        <input type="text" id="chat-input" placeholder="How do I fix the Bias issues detected in my model?">
+                        <button id="chat-send" class="btn-primary"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB: Monitoring -->
+            <section id="tab-monitoring" class="tab-pane">
+                <div class="card glass">
+                    <h3>Model Drift Detection</h3>
+                    <div class="form-grid" style="margin-bottom: 20px;">
+                        <input type="text" id="mon-uuid" placeholder="Model UUID">
+                        <input type="text" id="mon-prev-id" placeholder="Previous Audit ID">
+                        <button id="run-monitoring" class="btn-primary">CHECK DRIFT</button>
+                    </div>
+                    <div id="drift-results" class="hidden">
+                        <div class="metrics-grid">
+                            <div class="metric-item">
+                                <span class="label">Previous Score</span>
+                                <span class="value" id="prev-score">0</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="label">Current Score</span>
+                                <span class="value" id="current-score-mon">0</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="label">Drift Status</span>
+                                <span class="value" id="drift-status">SAFE</span>
+                            </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- Radar Chart -->
-                <div class="card glass chart-card">
-                    <h3>Governance Dimensions</h3>
-                    <canvas id="radarChart"></canvas>
-                </div>
-
-                <!-- Legal Risks -->
-                <div class="card glass risk-card">
-                    <h3>Compliance Risk Mapping (India)</h3>
-                    <div id="legal-risks-list" class="risk-list">
-                        <div class="risk-item placeholder">No risks detected</div>
-                    </div>
-                    <div class="penalty-footer">
-                        Potential Penalty Exposure: <span id="penalty-amount">₹0 Cr</span>
-                    </div>
-                </div>
-
-                <!-- Recommendations -->
-                <div class="card glass recommendations-card">
-                    <h3>Remediation Roadmap</h3>
-                    <ul id="recommendations-list">
-                        <li>System waiting for audit data...</li>
-                    </ul>
                 </div>
             </section>
         </main>
 
-        <footer>
-            <p>&copy; 2026 RATIO Governance Platform | ATS Layer Integration v1.0</p>
-        </footer>
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="modal hidden">
+            <div class="modal-content glass">
+                <h3>Backend Infrastructure Settings</h3>
+                <p>Configure your local or remote API URL below. Use an HTTPS ngrok URL if accessing via GitHub Pages.</p>
+                <div class="form-group">
+                    <label>API Base URL</label>
+                    <input type="text" id="settings-api-url" value="http://localhost:8000">
+                </div>
+                <div class="modal-actions">
+                    <button id="save-settings" class="btn-primary">SAVE CONFIG</button>
+                    <button id="close-settings" class="btn-secondary">CLOSE</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Global Loader -->
+        <div id="loader" class="loader-overlay hidden">
+            <div class="spinner"></div>
+            <p>Unified Governance Pipeline Running...</p>
+        </div>
     </div>
     <script src="app.js"></script>
 </body>
