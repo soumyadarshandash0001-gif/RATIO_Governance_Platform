@@ -390,9 +390,15 @@ async def health():
     return {"status": "ok", "version": "1.0.0"}
 
 # Serve NVIDIA-style Dashboard via Backend (Fixes 'Failed to Fetch')
-frontend_path = os.path.join(os.path.dirname(__file__), "../../frontend/dashboard")
+# Use absolute path detection for robustness
+current_dir = os.path.dirname(os.path.abspath(__file__))
+frontend_path = os.path.abspath(os.path.join(current_dir, "../../../frontend/dashboard"))
+
 if os.path.exists(frontend_path):
     app.mount("/dashboard", StaticFiles(directory=frontend_path, html=True), name="dashboard")
+    print(f"✅ Dashboard successfully mounted from: {frontend_path}")
+else:
+    print(f"❌ Dashboard folder not found at: {frontend_path}")
 
 if __name__ == "__main__":
     import uvicorn
