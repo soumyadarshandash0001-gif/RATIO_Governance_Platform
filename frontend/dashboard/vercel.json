@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "name": "ratio-governance-hub",
+  "builds": [
+    {
+      "src": "**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ]
+}

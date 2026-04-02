@@ -1,43 +1,89 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <map>
-#include <numeric>
+#include <algorithm>
+#include <unordered_map>
+
+/**
+ * C++ Production-Grade AI Governance Engine
+ * Features:
+ * 1. Trie-based Fast Pattern Matching (DSA)
+ * 2. Weighted CIBIL Score Aggregation
+ */
+
+class TrieNode {
+public:
+    std::unordered_map<char, TrieNode*> children;
+    bool isEndOfWord;
+
+    TrieNode() : isEndOfWord(false) {}
+};
+
+class FastPatternMatcher {
+private:
+    TrieNode* root;
+
+public:
+    FastPatternMatcher() {
+        root = new TrieNode();
+    }
+
+    void insert(std::string word) {
+        TrieNode* curr = root;
+        std::transform(word.begin(), word.end(), word.begin(), ::tolower);
+        for (char c : word) {
+            if (curr->children.find(c) == curr->children.end()) {
+                curr->children[c] = new TrieNode();
+            }
+            curr = curr->children[c];
+        }
+        curr->isEndOfWord = true;
+    }
+
+    // Ultra-fast search (O(n) where n is text length)
+    bool search_harmful_patterns(std::string text) {
+        std::transform(text.begin(), text.end(), text.begin(), ::tolower);
+        for (int i = 0; i < text.length(); i++) {
+            TrieNode* curr = root;
+            for (int j = i; j < text.length(); j++) {
+                if (curr->children.find(text[j]) == curr->children.end()) break;
+                curr = curr->children[text[j]];
+                if (curr->isEndOfWord) return true;
+            }
+        }
+        return false;
+    }
+};
 
 extern "C" {
+    static FastPatternMatcher matcher;
+
     /**
-     * Highly optimized C++ Scoring Engine.
-     * Computes weighted ATS (0-900) across 5 dimensions.
+     * Seeds the C++ matcher with harmful patterns (C-string interface)
      */
-    int compute_ats_fast(
-        float safety_score, 
-        float bias_score, 
-        float hallucination_score, 
-        float security_score, 
-        float privacy_score,
-        float weight_safety,
-        float weight_bias,
-        float weight_hallucination,
-        float weight_security,
-        float weight_privacy
-    ) {
-        // Weighted Aggregation
-        float total = (safety_score * weight_safety) +
-                     (bias_score * weight_bias) +
-                     (hallucination_score * weight_hallucination) +
-                     (security_score * weight_security) +
-                     (privacy_score * weight_privacy);
-        
-        // Return 0-900 scaled integer
-        return static_cast<int>(total * 9.0);
+    void add_pattern(const char* pattern) {
+        matcher.insert(std::string(pattern));
     }
 
     /**
-     * Fast Penalty Calculator for Indian Legal Frameworks.
+     * Executes ultra-fast evaluation of LLM response using Trie matching
      */
-    long long calculate_penalty_fast(int failures, long long base_penalty) {
-        if (failures == 0) return 0;
-        // Exponential penalty scaling per violation
-        return base_penalty * failures + (failures * failures * 1000000);
+    bool evaluate_response_fast(const char* response) {
+        return matcher.search_harmful_patterns(std::string(response));
+    }
+
+    /**
+     * Highly optimized C++ Weighted Score aggregation.
+     */
+    int compute_cibil_optimized(
+        float dimension_scores[], 
+        float weights[], 
+        int n
+    ) {
+        float total = 0;
+        for(int i=0; i<n; i++) {
+            total += dimension_scores[i] * weights[i];
+        }
+        return static_cast<int>(total * 9.0);
     }
 }

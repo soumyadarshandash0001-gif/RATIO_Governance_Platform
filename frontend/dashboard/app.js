@@ -1,25 +1,167 @@
-// --- TURBO HUB CONFIGURATION ---
-let API_BASE_URL = localStorage.getItem('ratio-api-url') || "http://localhost:8000";
-let currentAuditData = null;
-let radarChart;
+// --- PRODUCTION CLOUD CONFIGURATION ---
+const isLocalOrigin = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+const isHttpsOrigin = window.location.protocol === "https:";
+let DEFAULT_API = isLocalOrigin ? "http://localhost:8000" : "https://ratio-backend.onrender.com";
+let API_BASE_URL = localStorage.getItem('ratio-api-url') || DEFAULT_API;
+
+let cibilGauge;
+let currentAuditController = null;
 
 // --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
     initApp();
     setupNavigation();
-    initChart();
+    initGauge();
     checkBackendHealth();
+    startLocalNodeScanner();
     setupSettings();
-    setupChat();
-    setupRegistry();
-    setupMonitoring();
-    setupReporting();
+    setupAuditFlow();
 });
 
 function initApp() {
     document.getElementById('settings-api-url').value = API_BASE_URL;
-    // Auto-recovery: If loader is stuck for some reason, clicking anywhere hides it.
     document.addEventListener('keydown', (e) => { if (e.key === "Escape") stopLoader(); });
+}
+
+// --- CLOUDLESS: LOCAL NODE DISCOVERY (HTTPS AWARE) ---
+function startLocalNodeScanner() {
+    const nodeStatus = document.getElementById('local-node-status');
+    const localCheck = async () => {
+        // If we are on HTTPS (GitHub Pages) and trying to reach HTTP (Localhost), browser blocks it.
+        if (isHttpsOrigin && API_BASE_URL.startsWith("http://")) {
+            nodeStatus.innerText = "LOCAL NODE: HUB SSL MISMATCH";
+            nodeStatus.className = "status-badge danger-border";
+            return;
+        }
+
+        try {
+            const controller = new AbortController();
+            const tId = setTimeout(() => controller.abort(), 2000);
+            const res = await fetch(`${API_BASE_URL}/health`, { mode: 'cors', signal: controller.signal });
+            clearTimeout(tId);
+            if (res.ok) {
+                nodeStatus.innerText = "LOCAL NODE: READY (FREE COMPUTE)";
+                nodeStatus.className = "status-badge success-border pulse";
+            } else throw new Error();
+        } catch {
+            nodeStatus.innerText = "LOCAL NODE: OFFLINE";
+            nodeStatus.className = "status-badge warning-border";
+        }
+    };
+    localCheck();
+    setInterval(localCheck, 10000);
+}
+
+// --- CIBIL GAUGE ---
+function initGauge() {
+    const ctx = document.getElementById('cibilGauge').getContext('2d');
+    cibilGauge = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            datasets: [{
+                data: [0, 900],
+                backgroundColor: ['#76B900', 'rgba(255, 255, 255, 0.05)'],
+                borderWidth: 0,
+                cutout: '80%',
+                circumference: 180,
+                rotation: 270
+            }]
+        },
+        options: {
+            plugins: { tooltip: { enabled: false }, legend: { display: false } },
+            responsive: true, maintainAspectRatio: false
+        }
+    });
+}
+
+function updateGauge(score) {
+    cibilGauge.data.datasets[0].data = [score, 900 - score];
+    cibilGauge.update();
+    animateValue(document.getElementById('ats-score'), 0, score, 1500);
+}
+
+// --- AUDIT FLOW (CONCURRENT + TIMEOUT) ---
+function setupAuditFlow() {
+    const runBtn = document.getElementById('run-audit-btn');
+    runBtn.onclick = async () => {
+        const modelSelect = document.getElementById('model-select').value;
+        const modelName = document.getElementById('model-name').value || modelSelect;
+
+        // 🛡️ SECURITY FIX: Warn user about HTTPS vs HTTP block
+        if (isHttpsOrigin && API_BASE_URL.startsWith("http://")) {
+            alert("❌ SECURITY BLOCK: GitHub Pages (HTTPS) cannot talk to a Local Backend (HTTP) directly.\n\nFIX:\n1. Click Gear (⚙️) Settings.\n2. Paste an HTTPS Tunnel URL (from ngrok or Localtonet).\n3. Or host the dashboard locally.");
+            return;
+        }
+
+        if (currentAuditController) currentAuditController.abort();
+        currentAuditController = new AbortController();
+
+        startLoader(`Executing Neural Governance Pipeline (Sub-10s Target)...`);
+
+        // Hard Failure Timeout (15 seconds)
+        const safetyTimeout = setTimeout(() => {
+            if (currentAuditController) {
+                currentAuditController.abort();
+                stopLoader();
+                alert("❌ AUDIT TIMED OUT: Your backend is not responding within 15 seconds. Ensure 'python ratio-sdk/cli.py start' is running.");
+            }
+        }, 15000);
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/audit`, {
+                method: 'POST',
+                mode: 'cors',
+                signal: currentAuditController.signal,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ model: modelName })
+            });
+
+            clearTimeout(safetyTimeout);
+
+            if (!res.ok) throw new Error("CIBIL Engine Connection Failed");
+
+            const data = await res.json();
+            updateUI(data);
+        } catch (e) {
+            if (e.name !== 'AbortError') {
+                alert(`❌ Audit Failed: ${e.message}\n\nFIX: Ensure your local node is running on ${API_BASE_URL}`);
+            }
+        } finally {
+            clearTimeout(safetyTimeout);
+            stopLoader();
+            currentAuditController = null;
+        }
+    };
+}
+
+function updateUI(data) {
+    document.getElementById('app-status').innerText = `Audit Speed: ${data.audit_speed} (TURBO C++)`;
+    document.getElementById('app-status').className = "status-badge success-border";
+
+    updateGauge(data.ats_score);
+    
+    const dBadge = document.getElementById('decision');
+    dBadge.innerText = data.decision;
+    dBadge.style.backgroundColor = getDecisionColor(data.decision);
+    document.getElementById('decision-reason').innerText = `Certified ID: ${data.cert_id}. Status: ${data.compliance_status}`;
+
+    if (data.is_certified) document.getElementById('generate-cert-btn').classList.remove('hidden');
+
+    for (const [key, val] of Object.entries(data.ats_dimensions)) {
+        const bar = document.getElementById(`bar-${key}`);
+        if (bar) bar.style.width = `${val}%`;
+    }
+
+    const riskList = document.getElementById('legal-risks-list');
+    riskList.innerHTML = '';
+    data.legal_risks.forEach(risk => {
+        const div = document.createElement('div');
+        div.className = 'risk-item danger-border';
+        div.innerHTML = `<strong>LAW VIOLERATION:</strong> ${risk}`;
+        riskList.appendChild(div);
+    });
+    
+    document.getElementById('penalty-amount').innerText = `₹${extractPenalty(data.penalty_summary)} Cr`;
 }
 
 // --- NAVIGATION ---
@@ -33,94 +175,29 @@ function setupNavigation() {
             document.querySelectorAll('.tab-pane').forEach(sec => sec.classList.remove('active'));
             const target = document.getElementById(`tab-${tabId}`);
             if (target) target.classList.add('active');
-            document.getElementById('current-page-name').innerText = tabId.toUpperCase();
+            document.getElementById('current-page-name').innerText = tabId.toUpperCase() + " HUB";
         });
     });
 }
 
-// --- TURBO AUDIT ENGINE (PARALLEL) ---
-document.getElementById('run-audit-btn').addEventListener('click', async () => {
-    const modelName = document.getElementById('model-name').value;
-    const turbo = document.getElementById('turbo-mode').checked;
-    
-    if (!modelName) { alert("Please enter a model name."); return; }
-
-    startLoader(`Initializing ${turbo ? 'Turbo' : 'Standard'} Audit Pipeline...`);
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/audit`, {
-            method: 'POST',
-            mode: 'cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                model: modelName,
-                turbo: turbo 
-            })
-        });
-
-        if (!response.ok) {
-            const err = await response.json().catch(() => ({ detail: "CORS/Network Error: Check Backend Settings" }));
-            throw new Error(err.detail);
-        }
-
-        currentAuditData = await response.json();
-        updateDashboardUI(currentAuditData);
-    } catch (error) {
-        console.error("Audit failed:", error);
-        // CRITICAL FIX: Ensure loader disappears on error
-        alert(`❌ Audit Error: ${error.message}\n\nFIX:\n1. Open Settings (⚙️) and check API Base URL.\n2. Ensure Ollama/Unsloth is running locally.`);
-    } finally {
-        stopLoader(); // CRITICAL FIX: Robust state recovery
-    }
-});
-
-function updateDashboardUI(data) {
-    // Topline Metrics (Turbo Timing)
-    animateValue(document.getElementById('ats-score'), 0, data.ats_score, 1000);
-    animateValue(document.getElementById('ratio-score'), 0, data.ratio_score, 1200);
-    
-    const statusText = `Aura Hub: ${data.audit_speed || 'Completed'}`;
-    document.getElementById('app-status').innerText = statusText;
-    document.getElementById('app-status').className = "status-badge success-border";
-
-    document.getElementById('ratio-tests').innerText = `${data.ratio_metrics.passed_tests} / ${data.ratio_metrics.total_tests}`;
-    document.getElementById('compliance-status').innerText = data.compliance_status;
-    
-    const dBadge = document.getElementById('decision');
-    dBadge.innerText = data.decision;
-    dBadge.style.backgroundColor = getDecisionColor(data.decision);
-    document.getElementById('decision-reason').innerText = data.reason;
-
-    updateChart([
-        data.ats_dimensions.safety, data.ats_dimensions.bias, 
-        data.ats_dimensions.hallucination, data.ats_dimensions.security, 
-        data.ats_dimensions.privacy
-    ]);
-
-    // Risk Mapping
-    const list = document.getElementById('legal-risks-list');
-    list.innerHTML = '';
-    data.legal_risks.forEach(risk => {
-        const div = document.createElement('div');
-        div.className = 'risk-item danger-border';
-        div.innerHTML = `<strong>LAW VIOLATION:</strong> ${risk}`;
-        list.appendChild(div);
-    });
-}
-
-// --- UTILS & HELPERS ---
-function startLoader(msg) { 
-    const l = document.getElementById('loader');
-    l.querySelector('p').innerText = msg;
-    l.classList.remove('hidden'); 
-}
+// --- UTILS ---
+function startLoader(msg) { document.getElementById('loader').classList.remove('hidden'); document.getElementById('loader').querySelector('p').innerText = msg; }
 function stopLoader() { document.getElementById('loader').classList.add('hidden'); }
-
 function getDecisionColor(d) {
     if (d.includes('Grade')) return '#76B900';
     if (d.includes('Ready')) return '#00A4EF';
     if (d.includes('Restricted')) return '#FDC830';
     return '#FF4B2B';
+}
+function animateValue(obj, start, end, duration) {
+    let startTimestamp = null;
+    const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        obj.innerHTML = Math.floor(progress * (end - start) + start);
+        if (progress < 1) window.requestAnimationFrame(step);
+    };
+    window.requestAnimationFrame(step);
 }
 function setupSettings() {
     const modal = document.getElementById('settings-modal');
@@ -135,26 +212,14 @@ function setupSettings() {
 }
 async function checkBackendHealth() {
     const s = document.getElementById('app-status');
+    const controller = new AbortController();
+    const tId = setTimeout(() => controller.abort(), 2000);
     try {
-        const r = await fetch(`${API_BASE_URL}/health`, { mode: 'cors' });
-        if (r.ok) { s.innerText = "Hub: Connected"; s.className = "status-badge success-border"; }
+        const r = await fetch(`${API_BASE_URL}/health`, { signal: controller.signal });
+        clearTimeout(tId);
+        if (r.ok) { s.innerText = "HUB: ONLINE"; s.className = "status-badge success-border"; }
         else throw new Error();
-    } catch { s.innerText = "Hub: Offline"; s.className = "status-badge danger-border"; }
+    } catch { s.innerText = "HUB: OFFLINE"; s.className = "status-badge danger-border"; }
 }
-function animateValue(obj, start, end, duration) {
-    let startTimestamp = null;
-    const step = (timestamp) => {
-        if (!startTimestamp) startTimestamp = timestamp;
-        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-        obj.innerHTML = Math.floor(progress * (end - start) + start);
-        if (progress < 1) window.requestAnimationFrame(step);
-    };
-    window.requestAnimationFrame(step);
-}
-// Feature Stubs
-function initChart() { /* CHART JS LOGIC */ }
-function updateChart(scores) { /* CHART UPDATE */ }
+function extractPenalty(s) { const m = s.match(/₹(\d+)/); return m ? m[1] : '0'; }
 function setupChat() {}
-function setupRegistry() {}
-function setupMonitoring() {}
-function setupReporting() {}

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS & RATIO Governance Hub | NVIDIA Premium Analytics</title>
+    <title>AI CIBIL Scorecard | Startup Governance Hub</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -11,212 +11,134 @@
 </head>
 <body class="dark-theme">
     <div class="layout">
-        <!-- Sidebar Navigation -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <span class="logo-text"><span class="highlight">RATIO</span> HUB</span>
+                <span class="logo-text"><span class="highlight">RATIO</span> CIBIL</span>
             </div>
             <nav class="sidebar-nav">
                 <a href="#" class="nav-link active" data-tab="dashboard">
-                    <i class="fas fa-chart-line"></i> Dashboard
-                </a>
-                <a href="#" class="nav-link" data-tab="compare">
-                    <i class="fas fa-columns"></i> Model Comparison
+                    <i class="fas fa-certificate"></i> AI CIBIL HUB
                 </a>
                 <a href="#" class="nav-link" data-tab="registry">
-                    <i class="fas fa-plus-circle"></i> Register Model
+                    <i class="fas fa-list"></i> Registry
                 </a>
-                <a href="#" class="nav-link" data-tab="advisory">
-                    <i class="fas fa-robot"></i> AI Advisor
+                <a href="#" class="nav-link" data-tab="sdk">
+                    <i class="fas fa-terminal"></i> Developer SDK
                 </a>
                 <a href="#" class="nav-link" data-tab="monitoring">
-                    <i class="fas fa-wave-square"></i> Monitoring
-                </a>
-                <a href="#" class="nav-link" data-tab="verification">
-                    <i class="fas fa-certificate"></i> Certification
+                    <i class="fas fa-wave-square"></i> Drift Analytics
                 </a>
             </nav>
             <div class="sidebar-footer">
-                <button id="settings-btn" class="icon-btn" title="API Settings">
-                    <i class="fas fa-cog"></i> Settings
-                </button>
+                <button id="settings-btn" class="icon-btn"><i class="fas fa-cog"></i></button>
             </div>
         </aside>
 
-        <!-- Main Content Area -->
         <main class="main-content">
             <header class="content-header">
-                <div class="header-breadcrumb">AI Governance / <span id="current-page-name">Dashboard</span></div>
+                <div class="header-breadcrumb">Startup Governance / <span id="current-page-name">AI CIBIL Scorecard</span></div>
                 <div class="status-indicator">
-                    <span class="status-badge" id="app-status">Backend: Connecting...</span>
+                    <span class="status-badge" id="local-node-status">NODE: SCANNING...</span>
+                    <span class="status-badge" id="app-status">HUB: ONLINE</span>
                 </div>
             </header>
 
-            <!-- TAB: Dashboard -->
             <section id="tab-dashboard" class="tab-pane active">
                 <div class="control-panel card glass">
                     <div class="input-group">
-                            <option value="cloud">Cloud (Turbo)</option>
-                            <option value="local">Local (Unsloth)</option>
+                        <select id="model-select" class="small-select">
+                            <option value="gpt-4o">GPT-4o (Production)</option>
+                            <option value="claude-3-5-sonnet">Claude 3.5 Sonnet</option>
+                            <option value="llama3-70b">Llama 3 70B</option>
+                            <option value="qwen2.5-72b">Qwen 2.5 72B</option>
+                            <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
                         </select>
-                        <input type="text" id="model-name" placeholder="Enter Model (e.g. gpt-4, llama3)" value="gpt-4">
-                        <div class="turbo-toggle-container">
-                            <label class="switch">
-                                <input type="checkbox" id="turbo-mode" checked>
-                                <span class="slider round"></span>
-                            </label>
-                            <span class="turbo-label">TURBO</span>
-                        </div>
-                        <button id="run-audit-btn" class="btn-primary">RUN FAST AUDIT</button>
-                        <button id="export-report-btn" class="btn-secondary"><i class="fas fa-file-pdf"></i> EXPORT CERTIFICATE</button>
+                        <input type="text" id="model-name" placeholder="Or enter Model Identifier (e.g. llama3)" value="gpt-4o">
+                        <button id="run-audit-btn" class="btn-primary">GENERATE CIBIL SCORE</button>
                     </div>
+                    <p class="sub-label">Goal: Institutional-grade Audit in under 5 seconds.</p>
                 </div>
 
                 <div class="dashboard-grid">
-                    <!-- ATS Score -->
-                    <div class="card glass score-card">
-                        <h3>AI Trust Score (ATS)</h3>
-                        <div class="score-display">
-                            <span id="ats-score">0</span>
+                    <!-- MAIN CIBIL GAUGE -->
+                    <div class="card glass gauge-card">
+                        <h3>AI TRUST / CIBIL SCORE</h3>
+                        <div class="gauge-container">
+                            <canvas id="cibilGauge"></canvas>
+                            <div class="gauge-value" id="ats-score">0</div>
+                            <div class="gauge-label">TRUST INDEX</div>
                         </div>
-                        <div class="decision-badge" id="decision">Pending</div>
-                        <p id="decision-reason">Run audit to see deployment readiness.</p>
+                        <div class="decision-badge" id="decision">PENDING</div>
+                        <p id="decision-reason">Unified audit pending. Targets startups for production-readiness.</p>
+                        <button id="generate-cert-btn" class="btn-secondary hidden"><i class="fas fa-download"></i> DOWNLOAD CERTIFICATE</button>
                     </div>
 
-                    <!-- RATIO Score -->
-                    <div class="card glass ratio-card">
-                        <h3>RATIO Original Score</h3>
-                        <div class="score-display ratio-score">
-                            <span id="ratio-score">0</span>
-                        </div>
-                        <div class="metrics-grid">
-                            <div class="metric-item">
-                                <span class="label">Tests Status</span>
-                                <span class="value" id="ratio-tests">0 / 0</span>
-                            </div>
-                            <div class="metric-item">
-                                <span class="label">Compliance</span>
-                                <span class="value" id="compliance-status">N/A</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Radar Chart -->
-                    <div class="card glass chart-card">
+                    <!-- Dimension Breakdown -->
+                    <div class="card glass dimensions-card">
                         <h3>Governance Dimensions</h3>
-                        <canvas id="radarChart"></canvas>
+                        <div class="dimension-grid">
+                            <div class="dim-item"><span class="label">Safety</span><div class="progress-bar"><div id="bar-safety" class="progress"></div></div></div>
+                            <div class="dim-item"><span class="label">Bias</span><div class="progress-bar"><div id="bar-bias" class="progress"></div></div></div>
+                            <div class="dim-item"><span class="label">Privacy</span><div class="progress-bar"><div id="bar-privacy" class="progress"></div></div></div>
+                            <div class="dim-item"><span class="label">Security</span><div class="progress-bar"><div id="bar-security" class="progress"></div></div></div>
+                            <div class="dim-item"><span class="label">Reliability</span><div class="progress-bar"><div id="bar-reliability" class="progress"></div></div></div>
+                        </div>
                     </div>
 
-                    <!-- Legal Risks -->
+                    <!-- Risk Mapping (India) -->
                     <div class="card glass risk-card">
-                        <h3>Indian Law Risk Mapping</h3>
+                        <h3>Legal Risk Exposure (India)</h3>
                         <div id="legal-risks-list" class="risk-list">
-                            <div class="risk-item placeholder">No immediate risks detected.</div>
+                            <p class="placeholder">No audit run yet.</p>
                         </div>
                         <div class="penalty-box">
-                            Potential Penalty: <span id="penalty-amount" class="danger">₹0 Cr</span>
+                            Regulatory Exposure: <span id="penalty-amount" class="danger">₹0 Cr</span>
                         </div>
+                    </div>
+
+                    <!-- Startup Suggestions -->
+                    <div class="card glass suggestion-card">
+                        <h3>Remediation Roadmap</h3>
+                        <ul id="recommendations-list" class="rec-list">
+                            <li>Run an audit to receive institutional improvement suggestions.</li>
+                        </ul>
                     </div>
                 </div>
             </section>
+            <section id="tab-sdk" class="tab-pane">
+                <div class="card glass sdk-card">
+                    <h3>🚀 Deploy a "Cloudless" Local Audit Node</h3>
+                    <p>Lower your bills and ensure privacy by running the audit audit engine on your own hardware.</p>
+                    <div class="code-block glass">
+                        <pre><code># 1. Install the RATIO SDK
+pip install ratio-governance-hub
 
-            <!-- TAB: Registry -->
-            <section id="tab-registry" class="tab-pane">
-                <div class="card glass form-container">
-                    <h3>Register AI Model</h3>
-                    <form id="register-form">
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label>Provider</label>
-                                <select id="reg-provider">
-                                    <option value="custom_http">Ollama / Local</option>
-                                    <option value="openai">OpenAI</option>
-                                    <option value="huggingface">HuggingFace</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Display Name</label>
-                                <input type="text" id="reg-name" placeholder="My Enterprise Model">
-                            </div>
-                            <div class="form-group">
-                                <label>Identifier</label>
-                                <input type="text" id="reg-id" placeholder="llama3-70b-instruct">
-                            </div>
-                            <div class="form-group">
-                                <label>Max Tokens</label>
-                                <input type="number" id="reg-tokens" value="1000">
-                            </div>
-                        </div>
-                        <button type="submit" class="btn-primary">REGISTER MODEL</button>
-                    </form>
-                </div>
-            </section>
+# 2. Start your Local Audit Node
+python ratio-sdk/cli.py start
 
-            <!-- TAB: Advisory -->
-            <section id="tab-advisory" class="tab-pane">
-                <div class="chat-container card glass">
-                    <div class="chat-header">
-                        <h3>🤖 Governance Advisory (Llama Powered)</h3>
+# 3. Tunnel for Cloud Access (Optional)
+ngrok http 8000</code></pre>
                     </div>
-                    <div class="chat-messages" id="chat-messages">
-                        <div class="message bot">Hello! I am your AI Compliance Officer. Ask me anything about your audit results or Indian Laws.</div>
-                    </div>
-                    <div class="chat-input-area">
-                        <input type="text" id="chat-input" placeholder="How do I fix the Bias issues detected in my model?">
-                        <button id="chat-send" class="btn-primary"><i class="fas fa-paper-plane"></i></button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- TAB: Monitoring -->
-            <section id="tab-monitoring" class="tab-pane">
-                <div class="card glass">
-                    <h3>Model Drift Detection</h3>
-                    <div class="form-grid" style="margin-bottom: 20px;">
-                        <input type="text" id="mon-uuid" placeholder="Model UUID">
-                        <input type="text" id="mon-prev-id" placeholder="Previous Audit ID">
-                        <button id="run-monitoring" class="btn-primary">CHECK DRIFT</button>
-                    </div>
-                    <div id="drift-results" class="hidden">
-                        <div class="metrics-grid">
-                            <div class="metric-item">
-                                <span class="label">Previous Score</span>
-                                <span class="value" id="prev-score">0</span>
-                            </div>
-                            <div class="metric-item">
-                                <span class="label">Current Score</span>
-                                <span class="value" id="current-score-mon">0</span>
-                            </div>
-                            <div class="metric-item">
-                                <span class="label">Drift Status</span>
-                                <span class="value" id="drift-status">SAFE</span>
-                            </div>
-                        </div>
+                    <div class="alert tip danger-border">
+                        <p><strong>PRO TIP:</strong> Copy the HTTPS URL from ngrok and paste it into <strong>Settings (⚙️)</strong> to connect this cloud hub to your local hardware for FREE.</p>
                     </div>
                 </div>
             </section>
         </main>
 
-        <!-- Settings Modal -->
+        <!-- Settings Modal (Same as before) -->
         <div id="settings-modal" class="modal hidden">
             <div class="modal-content glass">
-                <h3>Backend Infrastructure Settings</h3>
-                <p>Configure your local or remote API URL below. Use an HTTPS ngrok URL if accessing via GitHub Pages.</p>
-                <div class="form-group">
-                    <label>API Base URL</label>
-                    <input type="text" id="settings-api-url" value="http://localhost:8000">
-                </div>
-                <div class="modal-actions">
-                    <button id="save-settings" class="btn-primary">SAVE CONFIG</button>
-                    <button id="close-settings" class="btn-secondary">CLOSE</button>
-                </div>
+                <h3>Backend Infrastructure Configuration</h3>
+                <input type="text" id="settings-api-url" placeholder="http://localhost:8000">
+                <button id="save-settings" class="btn-primary">SAVE</button>
+                <button id="close-settings" class="btn-secondary">CLOSE</button>
             </div>
         </div>
 
-        <!-- Global Loader -->
         <div id="loader" class="loader-overlay hidden">
             <div class="spinner"></div>
-            <p>Unified Governance Pipeline Running...</p>
+            <p>Executing Neural Governance Pipeline (Sub-5s Target)...</p>
         </div>
     </div>
     <script src="app.js"></script>
