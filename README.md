@@ -47,6 +47,71 @@ RATIO is an institutional-ready platform for auditing AI systems against governa
 
 ---
 
+## 🚀 Live Deployment & Access
+
+### 📱 Production Links
+
+| Service | Link | Status |
+|---------|------|--------|
+| **GitHub Repository** | [github.com/soumyadarshandash0001-gif/RATIO_Governance_Platform](https://github.com/soumyadarshandash0001-gif/RATIO_Governance_Platform) | ✅ Active |
+| **API Documentation** | Deploy to Vercel/Railway (configure below) | 🔧 Setup Required |
+| **Frontend Dashboard** | Deploy to Vercel (configure below) | 🔧 Setup Required |
+
+### 🚀 One-Click Deployment Options
+
+#### Option 1: Deploy Backend to Railway
+```bash
+# 1. Sign up: https://railway.app
+# 2. Create new project
+# 3. Select "Deploy from GitHub"
+# 4. Choose this repository
+# 5. Add environment variables:
+#    - DATABASE_URL (Railway PostgreSQL)
+#    - ENCRYPTION_KEY
+#    - Model provider API keys
+
+# Railway generates automatic URL (e.g., https://ratio-api.railway.app)
+```
+
+#### Option 2: Deploy Backend to Render
+```bash
+# 1. Sign up: https://render.com
+# 2. Create "New Web Service"
+# 3. Connect GitHub repository
+# 4. Build command: cd backend && pip install -r requirements.txt
+# 5. Start command: cd backend && uvicorn app.main:app --host 0.0.0.0
+# 6. Add PostgreSQL database service
+# 7. Render generates production URL
+```
+
+#### Option 3: Deploy Frontend to Vercel
+```bash
+# 1. Sign up: https://vercel.com
+# 2. Import this GitHub repository
+# 3. Set build command: cd frontend && pip install -r requirements.txt
+# 4. Configure environment: BACKEND_API=<your-railway-url>
+# 5. Vercel auto-generates shareable link
+```
+
+### 🔗 Generated Production URLs (Examples)
+After deployment, you'll receive:
+```
+Frontend:  https://ratio-dashboard-xxxxx.vercel.app
+Backend API: https://ratio-api-xxxxx.railway.app
+API Docs:  https://ratio-api-xxxxx.railway.app/docs
+Health: https://ratio-api-xxxxx.railway.app/health
+```
+
+### Share Your Deployment
+```markdown
+🔗 **RATIO Platform Live**
+🎯 Dashboard: [https://ratio-dashboard-xxxxx.vercel.app](https://ratio-dashboard-xxxxx.vercel.app)
+📊 API Docs: [https://ratio-api-xxxxx.railway.app/docs](https://ratio-api-xxxxx.railway.app/docs)
+⭐ Try it now!
+```
+
+---
+
 ## 🚀 Quick Start
 
 ### Prerequisites
