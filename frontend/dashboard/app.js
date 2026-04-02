@@ -7,7 +7,26 @@ let radarChart;
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     initChart();
+    checkBackendHealth();
 });
+
+async function checkBackendHealth() {
+    const statusEl = document.getElementById('app-status');
+    try {
+        const res = await fetch("http://localhost:8000/health", { timeout: 2000 });
+        if (res.ok) {
+            statusEl.innerText = "Backend: Online";
+            statusEl.style.color = "#76B900";
+            statusEl.style.borderColor = "#76B900";
+        } else {
+            throw new Error();
+        }
+    } catch (e) {
+        statusEl.innerText = "Backend: Offline (Check FastAPI)";
+        statusEl.style.color = "#FF4B2B";
+        statusEl.style.borderColor = "#FF4B2B";
+    }
+}
 
 // Run Audit Button Listener
 document.getElementById('run-audit-btn').addEventListener('click', async () => {
@@ -29,14 +48,15 @@ document.getElementById('run-audit-btn').addEventListener('click', async () => {
         });
 
         if (!response.ok) {
-            throw new Error(`API Error: ${response.statusText}`);
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.detail || `API Error: ${response.statusText}`);
         }
 
         const data = await response.json();
         updateUI(data);
     } catch (error) {
         console.error("Audit failed:", error);
-        alert(`Audit failed: ${error.message}. Ensure backend is running and Ollama is available.`);
+        alert(`❌ Audit Failed: ${error.message}\n\nEnsure:\n1. Backend is running (uvicorn app.main:app)\n2. Ollama is running and model "${modelName}" is pulled.`);
     } finally {
         stopLoading();
     }
@@ -46,35 +66,45 @@ document.getElementById('run-audit-btn').addEventListener('click', async () => {
 function startLoading() {
     document.getElementById('loader').classList.remove('hidden');
     document.getElementById('run-audit-btn').disabled = true;
+    document.getElementById('app-status').innerText = "Status: Auditing...";
 }
 
 function stopLoading() {
     document.getElementById('loader').classList.add('hidden');
     document.getElementById('run-audit-btn').disabled = false;
+    checkBackendHealth();
 }
 
 function updateUI(data) {
-    // 1. Update Score
-    const scoreEl = document.getElementById('ats-score');
-    animateValue(scoreEl, 0, data.ats_score, 1000);
+    // 1. Update ATS Score
+    const atsScoreEl = document.getElementById('ats-score');
+    animateValue(atsScoreEl, 0, data.ats_score, 1000);
 
-    // 2. Update Decision
+    // 2. Update RATIO Score (Original)
+    const ratioScoreEl = document.getElementById('ratio-score');
+    if (data.ratio_score) {
+        animateValue(ratioScoreEl, 0, data.ratio_score, 1200);
+        document.getElementById('ratio-tests').innerText = `${data.ratio_metrics.passed_tests} / ${data.ratio_metrics.total_tests}`;
+        document.getElementById('compliance-status').innerText = data.ratio_metrics.eligibility;
+    }
+
+    // 3. Update Decision
     const decisionEl = document.getElementById('decision');
     decisionEl.innerText = data.decision;
     decisionEl.style.backgroundColor = getDecisionColor(data.decision);
     document.getElementById('decision-reason').innerText = data.reason;
 
-    // 3. Update Chart
+    // 4. Update Chart (ATS Dimensions)
     const scores = [
-        data.dimension_scores.safety,
-        data.dimension_scores.bias,
-        data.dimension_scores.hallucination,
-        data.dimension_scores.security,
-        data.dimension_scores.privacy
+        data.ats_dimensions.safety,
+        data.ats_dimensions.bias,
+        data.ats_dimensions.hallucination,
+        data.ats_dimensions.security,
+        data.ats_dimensions.privacy
     ];
     updateChart(scores);
 
-    // 4. Update Legal Risks
+    // 5. Update Legal Risks
     const risksList = document.getElementById('legal-risks-list');
     risksList.innerHTML = '';
     
@@ -91,7 +121,7 @@ function updateUI(data) {
         document.getElementById('penalty-amount').innerText = '₹0 Cr';
     }
 
-    // 5. Update Recommendations
+    // 6. Update Recommendations
     const recsList = document.getElementById('recommendations-list');
     recsList.innerHTML = '';
     data.recommendations.forEach(rec => {
@@ -109,7 +139,7 @@ function initChart() {
         data: {
             labels: ['Safety', 'Bias', 'Hallucination', 'Security', 'Privacy'],
             datasets: [{
-                label: 'Governance Score',
+                label: 'ATS Dimensions',
                 data: [0, 0, 0, 0, 0],
                 backgroundColor: 'rgba(118, 185, 0, 0.2)',
                 borderColor: '#76B900',

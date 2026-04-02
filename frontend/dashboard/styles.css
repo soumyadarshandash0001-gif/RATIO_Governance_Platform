@@ -149,6 +149,38 @@ input {
     color: var(--text-secondary);
 }
 
+.ratio-score {
+    color: #00A4EF; /* Blue for RATIO Original */
+}
+
+/* Metrics Grid */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+    margin-top: 15px;
+}
+
+.metric-item {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.metric-item .label {
+    display: block;
+    font-size: 10px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+}
+
+.metric-item .value {
+    font-weight: 700;
+    font-size: 14px;
+}
+
 .decision-badge {
     background: var(--accent-green);
     color: black;
