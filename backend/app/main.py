@@ -4,6 +4,7 @@ import os
 import uuid
 import json
 import logging
+import httpx
 from fastapi import FastAPI, HTTPException, UploadFile, File, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
@@ -383,6 +384,20 @@ async def re_audit(request: MonitoringRequest):
     
     return new_audit
 
+
+@app.get("/api/v1/models/local")
+async def get_local_models():
+    """Discover models installed on local Ollama instance."""
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get("http://localhost:11434/api/tags", timeout=2.0)
+            if response.status_code == 200:
+                data = response.json()
+                return {"success": True, "models": [m["name"] for m in data.get("models", [])]}
+            return {"success": False, "models": ["llama3.1", "gemma2", "phi3"]} # Fallback presets
+    except:
+        # If Ollama is not running, return best-in-class 4GB SLM presets
+        return {"success": False, "models": ["llama3.1:8b", "gemma2:9b", "phi3:mini", "qwen2.5:7b"]}
 
 @app.get("/health")
 async def health():

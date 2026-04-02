@@ -1,55 +1,53 @@
-from .supabase_client import SupabaseManager
+import os
+from supabase import create_client, Client
 
-def seed_model_registry():
+# RATIO PRODUCTION CONFIG
+SUPABASE_URL = os.getenv("SUPABASE_URL", "https://your-project.supabase.co")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY", "your-service-role-key")
+
+def seed_small_models():
     """
-    Seeds the Supabase Model Registry with industry-standard LLMs
-    to empower startups with instant benchmarking.
+    Seeds the Supabase Model Registry with high-speed small models (SLMs)
+    Optimized for sub-5 second audits.
     """
-    models = [
+    supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+    
+    small_models = [
         {
-            "display_name": "GPT-4o (Production)",
-            "model_identifier": "gpt-4o",
-            "provider_type": "openai",
-            "benchmark_ats": 820,
-            "sector": "General Purpose"
+            "model_name": "Gemini 1.5 Flash",
+            "provider": "Google",
+            "parameter_count": "N/A (API)",
+            "benchmark_score": 88,
+            "status": "Verified",
+            "latency": "Fast",
+            "type": "SLM"
         },
         {
-            "display_name": "Claude 3.5 Sonnet",
-            "model_identifier": "claude-3-5-sonnet",
-            "provider_type": "anthropic",
-            "benchmark_ats": 845,
-            "sector": "Research & Code"
+            "model_name": "Llama 3.2 1B",
+            "provider": "Meta",
+            "parameter_count": "1 Billion",
+            "benchmark_score": 76,
+            "status": "Ready",
+            "latency": "Ultra-Fast",
+            "type": "SLM"
         },
         {
-            "display_name": "Llama 3 70B (Fast)",
-            "model_identifier": "llama3-70b",
-            "provider_type": "custom_http",
-            "benchmark_ats": 780,
-            "sector": "Open Source"
-        },
-        {
-            "display_name": "Qwen 2.5 72B",
-            "model_identifier": "qwen2.5-72b",
-            "provider_type": "custom_http",
-            "benchmark_ats": 795,
-            "sector": "Enterprise"
-        },
-        {
-            "display_name": "Gemini 1.5 Pro",
-            "model_identifier": "gemini-1.5-pro",
-            "provider_type": "google",
-            "benchmark_ats": 810,
-            "sector": "Multi-Modal"
+            "model_name": "Qwen 2.5 0.5B",
+            "provider": "Alibaba",
+            "parameter_count": "0.5 Billion",
+            "benchmark_score": 72,
+            "status": "Experimental",
+            "latency": "Neural Speed",
+            "type": "SLM"
         }
     ]
-
-    client = SupabaseManager.get_client()
-    for model in models:
+    
+    for model in small_models:
         try:
-            client.table("model_registry").upsert(model, on_conflict="model_identifier").execute()
-            print(f"✓ Seeded: {model['display_name']}")
+            supabase.table("model_registry").upsert(model, on_conflict="model_name").execute()
+            print(f"✅ Fast Model Registered: {model['model_name']}")
         except Exception as e:
-            print(f"❌ Failed to seed {model['display_name']}: {e}")
+            print(f"❌ Failed to seed {model['model_name']}: {str(e)}")
 
 if __name__ == "__main__":
-    seed_model_registry()
+    seed_small_models()

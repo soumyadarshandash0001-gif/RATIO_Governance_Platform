@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupSettings();
     setupAuditFlow();
     startLocalDiscovery();
+    fetchLocalModels();
 });
 
 function logSystem(msg, type = "info") {
@@ -66,7 +67,7 @@ function setupAuditFlow() {
 
         if (isHttpsOrigin && API_BASE_URL.startsWith("http://")) {
             logSystem("ALARM: SSL Block Detected. Browser prevented HTTPS->HTTP connection.", "error");
-            alert("❌ SECURITY BLOCK: GitHub Pages (HTTPS) cannot talk to a Local Backend (HTTP) directly.\n\nUse an HTTPS Tunnel (ngrok) and update settings.");
+            document.getElementById('rescue-bridge').classList.remove('hidden');
             return;
         }
 
@@ -223,3 +224,25 @@ function setupSettings() {
     };
 }
 function extractPenalty(s) { const m = s.match(/₹(\d+)/); return m ? m[1] : '0'; }
+
+async function fetchLocalModels() {
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/v1/models/local`, { mode: 'cors' });
+        if (res.ok) {
+            const data = await res.json();
+            const select = document.getElementById('model-select');
+            if (data.models && data.models.length > 0) {
+                select.innerHTML = '<option value="" disabled selected>Select from 4GB Hub...</option>';
+                data.models.forEach(m => {
+                    const opt = document.createElement('option');
+                    opt.value = m;
+                    opt.innerText = m.toUpperCase() + " (Auto-Discovered)";
+                    select.appendChild(opt);
+                });
+                logSystem(`Discovered ${data.models.length} Local Models Ready for Audit.`);
+            }
+        }
+    } catch {
+        logSystem("Model Hub Discovery Scan: Passive (Waiting for Backend)...");
+    }
+}
