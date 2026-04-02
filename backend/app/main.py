@@ -1,7 +1,10 @@
 """RATIO Backend FastAPI Application."""
 import asyncio
 import os
-from fastapi import FastAPI, HTTPException, UploadFile, File
+import uuid
+import json
+import logging
+from fastapi import FastAPI, HTTPException, UploadFile, File, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -68,11 +71,20 @@ app = FastAPI(
 # Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins for development/demo
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Global Exception Handler to prevent hanging connections
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logging.error(f"GLOBAL ERROR: {str(exc)}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"success": False, "detail": f"Backend Internal Error: {str(exc)}"}
+    )
 
 # Include ATS Audit Router
 app.include_router(audit_router, prefix="", tags=["ATS Audit"])
