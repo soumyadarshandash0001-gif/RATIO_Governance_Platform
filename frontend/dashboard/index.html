@@ -20,6 +20,9 @@
                 <a href="#" class="nav-link active" data-tab="dashboard">
                     <i class="fas fa-chart-line"></i> Dashboard
                 </a>
+                <a href="#" class="nav-link" data-tab="compare">
+                    <i class="fas fa-columns"></i> Model Comparison
+                </a>
                 <a href="#" class="nav-link" data-tab="registry">
                     <i class="fas fa-plus-circle"></i> Register Model
                 </a>
@@ -53,8 +56,19 @@
             <section id="tab-dashboard" class="tab-pane active">
                 <div class="control-panel card glass">
                     <div class="input-group">
-                        <input type="text" id="model-name" placeholder="Enter Model (e.g. llama3)" value="llama3">
-                        <button id="run-audit-btn" class="btn-primary">RUN UNIFIED AUDIT</button>
+                            <option value="cloud">Cloud (Turbo)</option>
+                            <option value="local">Local (Unsloth)</option>
+                        </select>
+                        <input type="text" id="model-name" placeholder="Enter Model (e.g. gpt-4, llama3)" value="gpt-4">
+                        <div class="turbo-toggle-container">
+                            <label class="switch">
+                                <input type="checkbox" id="turbo-mode" checked>
+                                <span class="slider round"></span>
+                            </label>
+                            <span class="turbo-label">TURBO</span>
+                        </div>
+                        <button id="run-audit-btn" class="btn-primary">RUN FAST AUDIT</button>
+                        <button id="export-report-btn" class="btn-secondary"><i class="fas fa-file-pdf"></i> EXPORT CERTIFICATE</button>
                     </div>
                 </div>
 

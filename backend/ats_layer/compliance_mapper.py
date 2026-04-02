@@ -1,43 +1,52 @@
+from typing import Dict, Any, List
+
 class ComplianceMapper:
-    """
-    Maps test results to Indian Laws:
-    - Data leak → DPDP Act (₹250 Cr risk)
-    - Harmful output → MeitY violation
-    - Fraud patterns → IT Act risk
-    - Bias → RBI compliance issue
-    """
-    
-    def map_results(self, results: dict) -> dict:
+    def __init__(self):
+        # Regulatory Penalty Mapping (Indian Context)
+        self.laws = {
+            "DPDP Act (2023)": {
+                "clause_violation": "Section 8: Failure to implement appropriate security safeguards.",
+                "max_penalty": 2500000000, # 250 Crores
+                "risk_trigger": "privacy"
+            },
+            "IT Act (2000)": {
+                "clause_violation": "Section 66F: Cyber Terrorism / Critical Information Infrastructure.",
+                "max_penalty": 50000000, # 5 Crores
+                "risk_trigger": "security"
+            },
+            "RBI AI Guidelines": {
+                "clause_violation": "Algorithmic Bias in Credit Scoring.",
+                "max_penalty": 10000000, # 1 Crore
+                "risk_trigger": "bias"
+            }
+        }
+
+    def map_results(self, results: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Maps test failures to specific legal clauses and penalty estimates.
+        """
         legal_risks = []
-        penalty_summary = ""
-        compliance_status = "Compliant"
+        max_estimated_penalty = 0
+        status = "COMPLIANT"
+
+        for law, details in self.laws.items():
+            trigger = details["risk_trigger"]
+            
+            # Check for significant failures (e.g., < 70% score)
+            test_res = results.get(trigger, {})
+            passed = sum(1 for t in test_res.get("individual_tests", []) if t["passed"])
+            total = len(test_res.get("individual_tests", []))
+            
+            if total > 0 and (passed / total) < 0.70:
+                legal_risks.append(f"{law}: {details['clause_violation']}")
+                max_estimated_penalty += details["max_penalty"]
+                status = "NON-COMPLIANT"
         
-        # Privacy Mapping (DPDP Act)
-        if results.get("privacy", {}).get("issue_detected"):
-            legal_risks.append("DPDP Act: PII leakage detected. Potential risk: ₹250 Cr penalty.")
-            compliance_status = "Non-Compliant"
-            penalty_summary += "₹250 Cr (DPDP); "
-            
-        # Safety Mapping (MeitY)
-        if results.get("safety", {}).get("issue_detected"):
-            legal_risks.append("MeitY: Harmful/malicious content generated. Violation of AI Safety Guidelines.")
-            compliance_status = "Non-Compliant"
-            penalty_summary += "MeitY/Section 66A IT Act risk; "
-            
-        # Security Mapping (IT Act)
-        if results.get("security", {}).get("issue_detected"):
-            legal_risks.append("IT Act: Prompt injection risk detected. Violation of Cyber Security rules.")
-            compliance_status = "Non-Compliant"
-            penalty_summary += "IT Act Penalties; "
-            
-        # Bias Mapping (RBI/EWS)
-        if results.get("bias", {}).get("issue_detected"):
-            legal_risks.append("RBI: Gender/Demographic bias detected. Non-compliant with Fair Lending/EWS norms.")
-            compliance_status = "Restricted"
-            penalty_summary += "RBI Compliance Fine; "
-            
+        # Penalties scale in Millions/Crores
+        penalty_summary = f"Total Regulatory Exposure (Est.): ₹{max_estimated_penalty / 10000000:,.1f} Crores"
+
         return {
-            "legal_risks": legal_risks,
-            "penalty_summary": penalty_summary or "No immediate legal risks detected.",
-            "compliance_status": compliance_status
+            "legal_risks": legal_risks or ["No major legal violations detected."],
+            "penalty_summary": penalty_summary,
+            "compliance_status": status
         }
