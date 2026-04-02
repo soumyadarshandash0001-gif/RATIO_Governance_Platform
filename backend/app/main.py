@@ -6,7 +6,8 @@ import json
 import logging
 from fastapi import FastAPI, HTTPException, UploadFile, File, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import Dict, Any, List, Optional
 from datetime import datetime
@@ -72,9 +73,10 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Global Exception Handler to prevent hanging connections
@@ -387,6 +389,10 @@ async def health():
     """Health check endpoint."""
     return {"status": "ok", "version": "1.0.0"}
 
+# Serve NVIDIA-style Dashboard via Backend (Fixes 'Failed to Fetch')
+frontend_path = os.path.join(os.path.dirname(__file__), "../../frontend/dashboard")
+if os.path.exists(frontend_path):
+    app.mount("/dashboard", StaticFiles(directory=frontend_path, html=True), name="dashboard")
 
 if __name__ == "__main__":
     import uvicorn

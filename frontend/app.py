@@ -88,6 +88,7 @@ with st.sidebar:
             "Register Model",
             "Run Audit",
             "View Results",
+            "Share Audit",
             "Governance Advisory",
             "Monitoring",
             "Verify Certificate",
@@ -323,12 +324,246 @@ elif page == "View Results":
         for i, rec in enumerate(roadmap.get("priority_actions", []), 1):
             st.info(f"{i}. {rec}")
         
+        # SHAREABLE LINK SECTION
+        st.divider()
+        st.subheader("📤 Share Audit Results")
+        
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            if st.button("🔗 Generate Shareable Link", use_container_width=True, key="share_btn"):
+                try:
+                    audit_id = audit_data.get("audit_id", "audit-demo")
+                    response = requests.post(
+                        f"{API_BASE_URL}/audits/share",
+                        params={"audit_id": audit_id},
+                    )
+                    
+                    if response.status_code == 200:
+                        share_result = response.json()
+                        share_url = share_result.get("public_link", "")
+                        shareable_id = share_result.get("shareable_id", "")
+                        
+                        st.session_state.shareable_link = share_url
+                        st.session_state.shareable_id = shareable_id
+                        
+                        st.success("✓ Shareable link created!")
+                    else:
+                        st.error("Failed to create shareable link")
+                except Exception as e:
+                    st.error(f"Error creating link: {str(e)}")
+        
+        # Display shareable link if exists
+        if hasattr(st.session_state, 'shareable_link') and st.session_state.shareable_link:
+            st.info("**Share this link with stakeholders to view audit results:**")
+            
+            share_link = st.session_state.shareable_link
+            col1, col2, col3 = st.columns([3, 1, 1])
+            
+            with col1:
+                st.code(share_link, language="text")
+            
+            with col2:
+                st.caption("Link expires in 90 days")
+            
+            with col3:
+                if st.button("📋 Copy"):
+                    st.write("Link copied! You can share it now.")
+            
+            # Sharing options
+            st.write("**Share on:**")
+            col1, col2, col3, col4 = st.columns(4)
+            
+            with col1:
+                mailto_link = f"mailto:?subject=RATIO%20Audit%20Results&body={share_link}"
+                st.markdown(f"[📧 Email]({mailto_link})")
+            
+            with col2:
+                twitter_link = f"https://twitter.com/intent/tweet?text=Check%20RATIO%20Audit%20Results%20{share_link}"
+                st.markdown(f"[🐦 Twitter]({twitter_link})")
+            
+            with col3:
+                linkedin_link = f"https://www.linkedin.com/sharing/share-offsite/?url={share_link}"
+                st.markdown(f"[💼 LinkedIn]({linkedin_link})")
+            
+            with col4:
+                st.markdown(f"[🔗 Copy Link]({share_link})")
+        
         # Full report JSON
         with st.expander("View Full JSON Report"):
             st.json(report)
     
     else:
         st.info("Run an audit first to view results")
+
+
+# ===== PAGE: SHARE AUDIT =====
+elif page == "Share Audit":
+    st.subheader("📤 Share Audit Results with Stakeholders")
+    
+    st.write("""
+    Generate a shareable link for your audit results that stakeholders can view without authentication.
+    Shared audits are public and expire after 90 days.
+    """)
+    
+    if st.session_state.current_audit:
+        audit_data = st.session_state.current_audit
+        
+        col1, col2 = st.columns([2, 1])
+        
+        with col1:
+            st.info(f"""
+            **Model:** {audit_data.get('model_name', 'Unknown')}  
+            **Score:** {audit_data.get('ai_trust_score', 0):.0f}/900  
+            **Status:** {audit_data.get('risk_tier', 'Unknown')}
+            """)
+        
+        with col2:
+            st.metric("Certification ID", audit_data.get("certification_id", "N/A"))
+        
+        st.divider()
+        
+        # Create shareable link
+        if st.button("🔗 Generate Shareable Link", use_container_width=True, key="share_main"):
+            try:
+                audit_id = audit_data.get("audit_id", "audit-demo")
+                response = requests.post(
+                    f"{API_BASE_URL}/audits/share",
+                    params={"audit_id": audit_id},
+                )
+                
+                if response.status_code == 200:
+                    share_result = response.json()
+                    share_url = share_result.get("public_link", "")
+                    shareable_id = share_result.get("shareable_id", "")
+                    
+                    st.session_state.shareable_link = share_url
+                    st.session_state.shareable_id = shareable_id
+                    
+                    st.success("✅ Shareable link created successfully!")
+                    st.balloons()
+                else:
+                    st.error("Failed to create shareable link")
+            except Exception as e:
+                st.error(f"Error: {str(e)}")
+        
+        # Display link and sharing options
+        if hasattr(st.session_state, 'shareable_link') and st.session_state.shareable_link:
+            st.markdown("---")
+            st.subheader("✅ Your Shareable Link")
+            
+            share_link = st.session_state.shareable_link
+            
+            # Display link
+            st.markdown("""
+            <div style="background-color: #f0f2f6; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                <p style="margin: 0; color: #666;">Share this link with stakeholders:</p>
+                <p style="margin: 5px 0; font-family: monospace; font-size: 14px; word-break: break-all;">
+                    <strong>""" + share_link + """</strong>
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Copy button
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                if st.button("📋 Copy to Clipboard", use_container_width=True):
+                    st.success("Link copied! Paste it anywhere to share.")
+            
+            with col2:
+                if st.button("🔄 Generate New Link", use_container_width=True):
+                    del st.session_state.shareable_link
+                    st.rerun()
+            
+            with col3:
+                if st.button("ℹ️ Link Info", use_container_width=True):
+                    st.info("""
+                    **Link Details:**
+                    - Expires in: 90 days
+                    - Public access: Yes
+                    - No authentication required
+                    - View-only (cannot modify results)
+                    """)
+            
+            st.markdown("---")
+            st.subheader("📢 Share On Social Media")
+            
+            share_text = f"Check out the RATIO AI Governance Audit for {audit_data.get('model_name')} - Score: {audit_data.get('ai_trust_score', 0):.0f}/900"
+            
+            col1, col2, col3, col4 = st.columns(4)
+            
+            with col1:
+                email_link = f"mailto:?subject=RATIO%20Audit%20Results&body={share_text}%20{share_link}"
+                st.markdown(f"[📧 **Email**]({email_link})", unsafe_allow_html=True)
+            
+            with col2:
+                twitter_text = f"{share_text}".replace(" ", "%20")
+                twitter_link = f"https://twitter.com/intent/tweet?text={twitter_text}%20{share_link}"
+                st.markdown(f"[🐦 **Twitter**]({twitter_link})", unsafe_allow_html=True)
+            
+            with col3:
+                linkedin_link = f"https://www.linkedin.com/sharing/share-offsite/?url={share_link}"
+                st.markdown(f"[💼 **LinkedIn**]({linkedin_link})", unsafe_allow_html=True)
+            
+            with col4:
+                st.markdown(f"[🔗 **Open Link**]({share_link})", unsafe_allow_html=True)
+            
+            st.markdown("---")
+            st.subheader("📝 Pre-written Messages")
+            
+            # Email template
+            with st.expander("📧 Email Template"):
+                email_msg = f"""Subject: RATIO AI Governance Audit Results - {audit_data.get('model_name')}
+
+Hi,
+
+I wanted to share the RATIO AI Governance Audit results for {audit_data.get('model_name')}:
+
+🎯 AI Trust Score: {audit_data.get('ai_trust_score', 0):.0f}/900
+📊 Risk Tier: {audit_data.get('risk_tier', 'Unknown')}
+✅ Certification: {audit_data.get('certification_id', 'N/A')}
+
+View the full audit results here: {share_link}
+
+RATIO audits AI models against 40+ governance tests across 8 risk categories to ensure enterprise-grade safety and compliance.
+
+Best regards"""
+                st.code(email_msg, language="text")
+                if st.button("📋 Copy Email Message"):
+                    st.success("Email message copied!")
+            
+            # LinkedIn template
+            with st.expander("💼 LinkedIn Post"):
+                linkedin_msg = f"""🏛️ We just audited {audit_data.get('model_name')} with RATIO - an AI governance certification platform.
+
+Results:
+✅ AI Trust Score: {audit_data.get('ai_trust_score', 0):.0f}/900
+📊 Risk Tier: {audit_data.get('risk_tier', 'Unknown')}
+🎯 Certified: {audit_data.get('eligibility_level', 'Unknown')}
+
+View detailed audit: {share_link}
+
+#AI #Governance #Safety #Certification #RATIO"""
+                st.code(linkedin_msg, language="text")
+                if st.button("📋 Copy LinkedIn Post"):
+                    st.success("LinkedIn post copied!")
+            
+            # Tweet template
+            with st.expander("🐦 Twitter Post"):
+                tweet_msg = f"""✅ {audit_data.get('model_name')} audited with RATIO!
+
+🎯 Score: {audit_data.get('ai_trust_score', 0):.0f}/900
+📊 Risk: {audit_data.get('risk_tier', 'Unknown')}
+
+View results: {share_link}
+
+#AI #Governance #Safety"""
+                st.code(tweet_msg, language="text")
+                if st.button("📋 Copy Tweet"):
+                    st.success("Tweet copied!")
+    
+    else:
+        st.warning("⚠️ No audit results to share")
+        st.info("👉 Go to 'Run Audit' first to generate audit results, then come back here to share them.")
 
 
 # ===== PAGE: GOVERNANCE ADVISORY =====

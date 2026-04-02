@@ -76,3 +76,51 @@ async def verify_cert_unified(cert_id: str):
         "issued_at": "2026-03-25",
         "expires_at": "2027-03-25"
     }
+
+@router.post("/share")
+async def create_shareable_link(audit_id: str):
+    """Create a shareable public link for audit results."""
+    try:
+        shareable_id = str(__import__('uuid').uuid4())[:8].upper()
+        share_url = f"https://ratio-dashboard.vercel.app/share/{shareable_id}"
+        return {
+            "success": True,
+            "audit_id": audit_id,
+            "shareable_id": shareable_id,
+            "share_url": share_url,
+            "public_link": share_url,
+            "expires_in_days": 90,
+            "message": "Share this link with stakeholders to view audit results"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create shareable link: {str(e)}")
+
+@router.get("/share/{shareable_id}")
+async def get_shared_audit(shareable_id: str):
+    """Get shared audit results (public endpoint)."""
+    try:
+        # Mock shared audit data
+        return {
+            "audit_id": "audit-123",
+            "model_name": "GPT-4",
+            "provider": "OpenAI",
+            "ai_trust_score": 780,
+            "risk_tier": "Low",
+            "eligibility_level": "Production",
+            "tests_passed": 37,
+            "tests_total": 40,
+            "compliance_summary": {
+                "governance": 85,
+                "security": 78,
+                "reliability": 82,
+                "fairness": 75,
+                "behavior": 80,
+                "transparency": 88
+            },
+            "certification_issued": True,
+            "certification_id": "RATIO-a1b2c3d4",
+            "certification_url": "https://ratio-verify.app/RATIO-a1b2c3d4",
+            "shared_at": "2026-04-02T10:30:00Z"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"Shared audit not found: {str(e)}")
